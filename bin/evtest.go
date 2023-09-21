@@ -1,4 +1,6 @@
+//go:build linux
 // +build linux
+
 // Input device event monitor.
 package main
 
@@ -8,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	evdev "github.com/gvalkov/golang-evdev"
+	evdev "github.com/maitredede/golang-evdev"
 )
 
 const (
