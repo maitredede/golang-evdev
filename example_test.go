@@ -1,7 +1,6 @@
-package evdev_test
+package evdev
 
 import (
-	. "evdev"
 	"fmt"
 )
 
@@ -12,7 +11,7 @@ func ExampleOpen() {
 
 // Listing accessible input devices.
 func ExampleListInputDevices() {
-	devices, _ := evdev.ListInputDevices()
+	devices, _ := ListInputDevices()
 
 	for _, dev := range devices {
 		fmt.Printf("%s %s %s", dev.Fn, dev.Name, dev.Phys)
@@ -35,9 +34,9 @@ func Example() {
 	//      2:[0 1 6 8 272 273 274 275 276 277 278 279]
 	//      1:[272 273 274 275 276 277 278 279] ]
 
-	fmt.Println(device.ResolveCapabilities())
-	// map[ 4:[4 272 273 274 275 276 277 278 279]
-	//      0:[0 1 2 4]
-	//      2:[0 1 6 8 272 273 274 275 276 277 278 279]
-	//      1:[272 273 274 275 276 277 278 279] ]
+	// fmt.Println(device.ResolveCapabilities())
+	// // map[ 4:[4 272 273 274 275 276 277 278 279]
+	// //      0:[0 1 2 4]
+	// //      2:[0 1 6 8 272 273 274 275 276 277 278 279]
+	// //      1:[272 273 274 275 276 277 278 279] ]
 }
