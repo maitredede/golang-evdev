@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package evdev
@@ -17,9 +18,10 @@ import (
 type InputDevice struct {
 	Fn string // path to input device (devnode)
 
-	Name string   // device name
-	Phys string   // physical topology of device
-	File *os.File // an open file handle to the input device
+	Name  string   // device name
+	Phys  string   // physical topology of device
+	Ident string   // unique identifier
+	File  *os.File // an open file handle to the input device
 
 	Bustype uint16 // bus type identifier
 	Vendor  uint16 // vendor identifier
@@ -102,11 +104,12 @@ func (dev *InputDevice) ReadOne() (*InputEvent, error) {
 }
 
 // Get a useful description for an input device. Example:
-//   InputDevice /dev/input/event3 (fd 3)
-//     name Logitech USB Laser Mouse
-//     phys usb-0000:00:12.0-2/input0
-//     bus 0x3, vendor 0x46d, product 0xc069, version 0x110
-//     events EV_KEY 1, EV_SYN 0, EV_REL 2, EV_MSC 4
+//
+//	InputDevice /dev/input/event3 (fd 3)
+//	  name Logitech USB Laser Mouse
+//	  phys usb-0000:00:12.0-2/input0
+//	  bus 0x3, vendor 0x46d, product 0xc069, version 0x110
+//	  events EV_KEY 1, EV_SYN 0, EV_REL 2, EV_MSC 4
 func (dev *InputDevice) String() string {
 	evtypes := make([]string, 0)
 
@@ -119,9 +122,10 @@ func (dev *InputDevice) String() string {
 		"InputDevice %s (fd %d)\n"+
 			"  name %s\n"+
 			"  phys %s\n"+
+			"  ident %s\n"+
 			"  bus 0x%04x, vendor 0x%04x, product 0x%04x, version 0x%04x\n"+
 			"  events %s",
-		dev.Fn, dev.File.Fd(), dev.Name, dev.Phys, dev.Bustype,
+		dev.Fn, dev.File.Fd(), dev.Name, dev.Phys, dev.Ident, dev.Bustype,
 		dev.Vendor, dev.Product, dev.Version, evtypes_s)
 }
 
@@ -179,6 +183,7 @@ func (dev *InputDevice) set_device_info() error {
 
 	name := new([MAX_NAME_SIZE]byte)
 	phys := new([MAX_NAME_SIZE]byte)
+	ident := new([MAX_NAME_SIZE]byte)
 
 	err := ioctl(dev.File.Fd(), uintptr(EVIOCGID), unsafe.Pointer(&info))
 	if err != 0 {
@@ -193,8 +198,12 @@ func (dev *InputDevice) set_device_info() error {
 	// it's ok if the topology info is not available
 	ioctl(dev.File.Fd(), uintptr(EVIOCGPHYS), unsafe.Pointer(phys))
 
+	// it's ok if the unique identifier is not available
+	ioctl(dev.File.Fd(), uintptr(EVIOCGUNIQ), unsafe.Pointer(ident))
+
 	dev.Name = bytes_to_string(name)
 	dev.Phys = bytes_to_string(phys)
+	dev.Ident = bytes_to_string(ident)
 
 	dev.Vendor = info.vendor
 	dev.Bustype = info.bustype
@@ -212,9 +221,10 @@ func (dev *InputDevice) set_device_info() error {
 }
 
 // Get repeat rate as a two element array.
-//   [0] repeat rate in characters per second
-//   [1] amount of time that a key must be depressed before it will start
-//       to repeat (in milliseconds)
+//
+//	[0] repeat rate in characters per second
+//	[1] amount of time that a key must be depressed before it will start
+//	    to repeat (in milliseconds)
 func (dev *InputDevice) GetRepeatRate() *[2]uint {
 	repeat_delay := new([2]uint)
 	ioctl(dev.File.Fd(), uintptr(EVIOCGREP), unsafe.Pointer(repeat_delay))
