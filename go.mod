@@ -1,3 +1,3 @@
 module github.com/maitredede/golang-evdev
 
-go 1.21
+go 1.23
